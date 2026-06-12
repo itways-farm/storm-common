@@ -28,7 +28,7 @@ jobs:
           cache: maven
 
       - name: Build & verify
-        run: mvn -f storm-common/pom.xml clean verify
+        run: mvn -f pom.xml clean verify
 
   release:
     name: Create GitHub Release (triggers JitPack)
