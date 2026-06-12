@@ -15,7 +15,7 @@ The workflow creates a GitHub Release → JitPack auto-builds it. External consu
   </repository>
 </repositories>
 <dependency>
-  <groupId>com.github.YOUR_GITHUB_USERNAME</groupId>
+  <groupId>com.github.itways-farm</groupId>
   <artifactId>storm-common</artifactId>
-  <version>common-v1.0.0</version>
+  <version>common-v1.0.1</version>
 </dependency>
