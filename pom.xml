@@ -15,6 +15,15 @@
     <artifactId>storm-common</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <name>Storm Common Library</name>
+    <description>Shared library for Storm Farm microservices — published via JitPack</description>
+    <!-- Replace YOUR_GITHUB_USERNAME with your actual GitHub username/org -->
+    <url>https://github.com/YOUR_GITHUB_USERNAME/storm-farm</url>
+
+    <scm>
+        <connection>scm:git:git://github.com/YOUR_GITHUB_USERNAME/storm-farm.git</connection>
+        <developerConnection>scm:git:ssh://github.com/YOUR_GITHUB_USERNAME/storm-farm.git</developerConnection>
+        <url>https://github.com/YOUR_GITHUB_USERNAME/storm-farm/tree/main/storm-common</url>
+    </scm>
 
     <properties>
         <java.version>21</java.version>

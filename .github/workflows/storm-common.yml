@@ -1,0 +1,47 @@
+name: storm-common — CI & JitPack Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'storm-common/**'
+      - '.github/workflows/storm-common.yml'
+      - 'jitpack.yml'
+    tags: ['common-v*']
+  pull_request:
+    branches: [main]
+    paths:
+      - 'storm-common/**'
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build & verify
+        run: mvn -f storm-common/pom.xml clean verify
+
+  release:
+    name: Create GitHub Release (triggers JitPack)
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/common-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: storm-common ${{ github.ref_name }}
+          generate_release_notes: true
