@@ -56,6 +56,10 @@ public class Device {
     @Column(name = "install_app")
     private Boolean installApp = true;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "locked_by_team_id")
+    private Team lockedByTeam;
+
     private String name;
 
     public Long getId() { return id; }
@@ -95,6 +99,8 @@ public class Device {
     public void setInputControl(Boolean inputControl) { this.inputControl = inputControl; }
     public Boolean getInstallApp() { return installApp; }
     public void setInstallApp(Boolean installApp) { this.installApp = installApp; }
+    public Team getLockedByTeam() { return lockedByTeam; }
+    public void setLockedByTeam(Team lockedByTeam) { this.lockedByTeam = lockedByTeam; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 }
