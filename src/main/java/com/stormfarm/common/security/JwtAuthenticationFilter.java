@@ -16,9 +16,20 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Authenticates requests carrying a JWT and populates the security context.
+ *
+ * The token is read from the {@code Authorization: Bearer} header. Only for
+ * requests that a browser cannot decorate with headers, namely WebSocket
+ * upgrades and Server-Sent Events subscriptions, is a {@code ?token=} query
+ * parameter accepted as a fallback. Ordinary REST calls never authenticate
+ * from the query string, so tokens do not leak into access logs and
+ * {@code Referer} headers.
+ */
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    static final String QUERY_TOKEN_PARAM = "token";
 
     private final JwtService jwtService;
 
@@ -55,20 +66,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Extracts the JWT from the Authorization header (Bearer scheme) or,
-     * for SSE endpoints that cannot set headers via browser EventSource,
-     * from the {@code token} query parameter.
-     */
-    private String extractToken(HttpServletRequest request) {
+    /** Package-private for tests. */
+    static String extractToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             return authHeader.substring(7);
         }
-        String queryToken = request.getParameter("token");
-        if (queryToken != null && !queryToken.isBlank()) {
-            return queryToken;
+        if (acceptsQueryToken(request)) {
+            String queryToken = request.getParameter(QUERY_TOKEN_PARAM);
+            if (queryToken != null && !queryToken.isBlank()) {
+                return queryToken;
+            }
         }
         return null;
+    }
+
+    /**
+     * WebSocket handshakes ({@code Upgrade: websocket}) and EventSource
+     * subscriptions ({@code Accept: text/event-stream}) are the only requests
+     * for which the browser API cannot attach an Authorization header.
+     */
+    static boolean acceptsQueryToken(HttpServletRequest request) {
+        String upgrade = request.getHeader("Upgrade");
+        if (upgrade != null && upgrade.equalsIgnoreCase("websocket")) {
+            return true;
+        }
+        String accept = request.getHeader("Accept");
+        return accept != null && accept.toLowerCase().contains("text/event-stream");
     }
 }
