@@ -25,6 +25,10 @@ public class DeviceDto {
     private Boolean screenStreaming;
     private Boolean inputControl;
     private Boolean installApp;
+    private Long lockedByTeamId;
+    private String lockedByTeamName;
+    private Boolean locked;
+    private Boolean lockedToMyTeam;
 
     public String getName() { return displayName; }
     public void setName(String name) { this.displayName = name; }
