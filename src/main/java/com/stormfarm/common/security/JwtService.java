@@ -17,6 +17,14 @@ import java.util.UUID;
 public class JwtService {
     private static final Logger log = LoggerFactory.getLogger(JwtService.class);
 
+    /** Permission keys the holder has, e.g. {@code devices:manage}. */
+    public static final String CLAIM_PERMISSIONS = "perms";
+
+    /** How far the holder can see; the name of an {@link com.stormfarm.common.entity.enums.AccessScope}. */
+    public static final String CLAIM_SCOPE = "scope";
+
+    private static final long DEFAULT_EXPIRY_MS = 15 * 60 * 1000L;
+
     private final PrivateKey privateKey;
     private final PublicKey publicKey;
 
@@ -25,13 +33,23 @@ public class JwtService {
         this.publicKey = pubKeyPem != null ? loadPublicKey(pubKeyPem) : null;
     }
 
-    public String issueAccessToken(Long userId, String email, String username, List<String> roles, long expiryMs) {
+    /**
+     * Issues an access token describing what the holder may do.
+     *
+     * The token carries permissions and scope, not just role names, so every
+     * service can authorize a request without a database lookup. A role whose
+     * permissions change therefore takes effect for a user on their next token,
+     * which is the point at which the platform re-reads their access.
+     */
+    public String issueAccessToken(TokenPrincipal principal, long expiryMs) {
         if (privateKey == null) throw new IllegalStateException("Private key not configured for signing");
         return Jwts.builder()
-                .subject(userId.toString())
-                .claim("email", email)
-                .claim("username", username)
-                .claim("roles", roles)
+                .subject(principal.userId().toString())
+                .claim("email", principal.email())
+                .claim("username", principal.username())
+                .claim("roles", principal.roles())
+                .claim(CLAIM_PERMISSIONS, List.copyOf(principal.permissions()))
+                .claim(CLAIM_SCOPE, principal.scope().name())
                 .id(UUID.randomUUID().toString())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiryMs))
@@ -39,8 +57,9 @@ public class JwtService {
                 .compact();
     }
 
-    public String issueAccessToken(Long userId, String email, String username, List<String> roles) {
-        return issueAccessToken(userId, email, username, roles, 15 * 60 * 1000L); // 15 mins default
+    /** Issues an access token with the default fifteen-minute lifetime. */
+    public String issueAccessToken(TokenPrincipal principal) {
+        return issueAccessToken(principal, DEFAULT_EXPIRY_MS);
     }
 
     public String issueRefreshToken(Long userId) {
