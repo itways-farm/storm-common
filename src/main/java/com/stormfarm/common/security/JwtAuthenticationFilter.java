@@ -1,5 +1,6 @@
 package com.stormfarm.common.security;
 
+import com.stormfarm.common.entity.enums.AccessScope;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -49,14 +50,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             Claims claims = jwtService.validate(token);
-            List<String> roles = claims.get("roles", List.class);
-            var authorities = roles.stream()
-                    .map(role -> new SimpleGrantedAuthority(role.startsWith("ROLE_") ? role : "ROLE_" + role))
+
+            // Authorities are the holder's permissions, not their role names: a
+            // role invented in the console must work without a code change, so
+            // nothing downstream is allowed to ask "are you an ADMIN?".
+            @SuppressWarnings("unchecked")
+            List<String> permissions = claims.get(JwtService.CLAIM_PERMISSIONS, List.class);
+            var authorities = (permissions == null ? List.<String>of() : permissions).stream()
+                    .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toList());
 
             Long userId = Long.parseLong(claims.getSubject());
+            AccessScope scope = AccessScope.parse(claims.get(JwtService.CLAIM_SCOPE, String.class));
 
             var authentication = new UsernamePasswordAuthenticationToken(userId, null, authorities);
+            authentication.setDetails(new AuthenticatedUser(userId, scope));
             log.debug("Authenticated user id={}", userId);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception e) {
