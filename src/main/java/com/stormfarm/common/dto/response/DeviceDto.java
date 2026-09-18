@@ -2,6 +2,8 @@ package com.stormfarm.common.dto.response;
 
 import com.stormfarm.common.entity.enums.DevicePlatform;
 import com.stormfarm.common.entity.enums.DeviceStatus;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.time.Instant;
 
@@ -11,9 +13,14 @@ public class DeviceDto {
     private String serial;
     private String stfSerial;
     private String model;
+    // Required when creating/updating a device (validated via @Valid on the
+    // controller); JSON field "name" maps here through getName/setName. Without
+    // these, a missing name/platform NPE'd in the mapper and surfaced as a 500.
+    @NotBlank
     private String displayName;
     private String brand;
     private String imageSlug;
+    @NotNull
     private DevicePlatform platform;
     private DeviceStatus status;
     private Boolean presence;

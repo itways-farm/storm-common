@@ -21,10 +21,13 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -146,6 +149,42 @@ public class CommonExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ApiResponse<Void>> handleMissingParams(MissingServletRequestParameterException e) {
         return error(HttpStatus.BAD_REQUEST, "Missing parameter: " + e.getParameterName());
+    }
+
+    /**
+     * A wrong-typed path variable or query param (a non-numeric id, an invalid
+     * enum value, an unparseable date) is a client mistake — 400, not a 500
+     * catch-all. Names the parameter but never echoes the rejected value back.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
+        log.warn("Type mismatch for parameter '{}'", e.getName());
+        return error(HttpStatus.BAD_REQUEST, "Invalid value for parameter '" + e.getName() + "'");
+    }
+
+    /** Wrong HTTP verb for the route. */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
+        return error(HttpStatus.METHOD_NOT_ALLOWED, "HTTP method not supported for this endpoint");
+    }
+
+    /** Non-JSON / unsupported request content type. */
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUnsupportedMedia(HttpMediaTypeNotSupportedException e) {
+        return error(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Unsupported content type");
+    }
+
+    /**
+     * An unknown path is a 404, not a 500. In Spring 6.1 an unmapped request
+     * falls through to the resource handler and throws NoResourceFoundException;
+     * without this it would reach the catch-all below and be logged at ERROR as
+     * "an internal server error", telling operators the service is broken while
+     * it is working correctly. Never echoes the requested path back.
+     */
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoResource(
+            org.springframework.web.servlet.resource.NoResourceFoundException e) {
+        return error(HttpStatus.NOT_FOUND, "The requested resource was not found");
     }
 
     // -- everything else ------------------------------------------------------

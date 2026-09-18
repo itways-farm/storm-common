@@ -43,6 +43,33 @@ class CommonExceptionHandlerTest {
     }
 
     @Test
+    void malformedRequestFamilyMapsWithoutFallingThroughToFiveHundred() {
+        // A wrong-typed path/query value, the wrong verb, a non-JSON body, and an
+        // unknown/unrouted path are all client mistakes — each must map to a 4xx
+        // here rather than reach the catch-all and be reported as a 500 at ERROR.
+        assertStatus(HttpStatus.BAD_REQUEST, handler.handleTypeMismatch(
+                new org.springframework.web.method.annotation.MethodArgumentTypeMismatchException(
+                        "notanumber", Long.class, "id", null, new NumberFormatException())));
+        assertStatus(HttpStatus.METHOD_NOT_ALLOWED, handler.handleMethodNotSupported(
+                new org.springframework.web.HttpRequestMethodNotSupportedException("PUT")));
+        assertStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE, handler.handleUnsupportedMedia(
+                new org.springframework.web.HttpMediaTypeNotSupportedException("text/plain")));
+        assertStatus(HttpStatus.NOT_FOUND, handler.handleNoResource(
+                new org.springframework.web.servlet.resource.NoResourceFoundException(
+                        org.springframework.http.HttpMethod.GET, "/api/v1/test-jobs/11")));
+    }
+
+    @Test
+    void unknownPathMessageDoesNotEchoTheRequestedPath() {
+        // The 404 body for an unknown path must not reflect the requested URL back.
+        ResponseEntity<ApiResponse<Void>> response = handler.handleNoResource(
+                new org.springframework.web.servlet.resource.NoResourceFoundException(
+                        org.springframework.http.HttpMethod.GET, "/api/v1/secret-probe"));
+        assertStatus(HttpStatus.NOT_FOUND, response);
+        assertFalse(response.getBody().getMessage().contains("secret-probe"));
+    }
+
+    @Test
     void unexpectedExceptionsDoNotLeakTheirMessage() {
         ResponseEntity<ApiResponse<Void>> response = handler.handleGeneral(new RuntimeException("jdbc password=hunter2"));
 
