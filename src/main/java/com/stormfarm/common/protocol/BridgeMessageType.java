@@ -20,6 +20,8 @@ public final class BridgeMessageType {
     public static final String GET_RUNNING_APPS = "GET_RUNNING_APPS";
     public static final String GET_FOREGROUND_APP = "GET_FOREGROUND_APP";
     public static final String RESET_STATE = "RESET_STATE";
+    /** iOS only: a physical button WebDriverAgent can press (HOME, LOCK, VOLUME_UP, VOLUME_DOWN). */
+    public static final String PRESS_BUTTON = "PRESS_BUTTON";
 
     // bridge to cloud
     public static final String DEVICE_ADDED = "DEVICE_ADDED";
