@@ -56,7 +56,7 @@ class CommonExceptionHandlerTest {
                 new org.springframework.web.HttpMediaTypeNotSupportedException("text/plain")));
         assertStatus(HttpStatus.NOT_FOUND, handler.handleNoResource(
                 new org.springframework.web.servlet.resource.NoResourceFoundException(
-                        org.springframework.http.HttpMethod.GET, "/api/v1/test-jobs/11")));
+                        org.springframework.http.HttpMethod.GET, "/api/v1/test-jobs/11", "")));
     }
 
     @Test
@@ -64,7 +64,7 @@ class CommonExceptionHandlerTest {
         // The 404 body for an unknown path must not reflect the requested URL back.
         ResponseEntity<ApiResponse<Void>> response = handler.handleNoResource(
                 new org.springframework.web.servlet.resource.NoResourceFoundException(
-                        org.springframework.http.HttpMethod.GET, "/api/v1/secret-probe"));
+                        org.springframework.http.HttpMethod.GET, "/api/v1/secret-probe", ""));
         assertStatus(HttpStatus.NOT_FOUND, response);
         assertFalse(response.getBody().getMessage().contains("secret-probe"));
     }

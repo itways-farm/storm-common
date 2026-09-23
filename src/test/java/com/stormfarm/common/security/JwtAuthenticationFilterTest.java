@@ -34,12 +34,12 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    void queryTokenIsAcceptedForServerSentEvents() {
+    void queryTokenIsRejectedForServerSentEvents() {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/devices/events");
         request.addHeader("Accept", "text/event-stream");
         request.setParameter("token", "abc.def.ghi");
 
-        assertEquals("abc.def.ghi", JwtAuthenticationFilter.extractToken(request));
+        assertNull(JwtAuthenticationFilter.extractToken(request));
     }
 
     @Test

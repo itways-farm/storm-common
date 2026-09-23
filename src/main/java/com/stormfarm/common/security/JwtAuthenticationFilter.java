@@ -21,11 +21,11 @@ import java.util.stream.Collectors;
  * Authenticates requests carrying a JWT and populates the security context.
  *
  * The token is read from the {@code Authorization: Bearer} header. Only for
- * requests that a browser cannot decorate with headers, namely WebSocket
- * upgrades and Server-Sent Events subscriptions, is a {@code ?token=} query
- * parameter accepted as a fallback. Ordinary REST calls never authenticate
- * from the query string, so tokens do not leak into access logs and
- * {@code Referer} headers.
+ * WebSocket upgrades are the only requests for which a {@code ?token=} query
+ * parameter is accepted as a fallback because the browser WebSocket API cannot
+ * attach an Authorization header. Event streams use authenticated fetch, so
+ * ordinary HTTP requests never authenticate from the query string and cannot
+ * leak tokens into access/error logs or {@code Referer} headers.
  */
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -90,16 +90,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * WebSocket handshakes ({@code Upgrade: websocket}) and EventSource
-     * subscriptions ({@code Accept: text/event-stream}) are the only requests
-     * for which the browser API cannot attach an Authorization header.
+     * WebSocket handshakes are the only requests for which the browser API
+     * cannot attach an Authorization header.
      */
     static boolean acceptsQueryToken(HttpServletRequest request) {
         String upgrade = request.getHeader("Upgrade");
         if (upgrade != null && upgrade.equalsIgnoreCase("websocket")) {
             return true;
         }
-        String accept = request.getHeader("Accept");
-        return accept != null && accept.toLowerCase().contains("text/event-stream");
+        return false;
     }
 }
