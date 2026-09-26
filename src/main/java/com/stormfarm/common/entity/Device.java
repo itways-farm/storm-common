@@ -13,6 +13,18 @@ public class Device {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Optimistic lock. Two services write this row — storm-core for the
+     * administrative fields, storm-device-detector for discovery and presence
+     * — and a JPA save() writes every mapped column, so whichever saves last
+     * silently reverts the other's change. This is the defect that produced
+     * P26-1, where a rename made in the console disappeared on the next bridge
+     * re-announce.
+     */
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
     @Column(nullable = false, unique = true, length = 100)
     private String serial;
 

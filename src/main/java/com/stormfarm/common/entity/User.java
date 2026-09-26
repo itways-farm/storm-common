@@ -17,6 +17,27 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Optimistic lock. Two services write this row — storm-core owns the
+     * profile, roles and team; storm-authentication owns failedLoginCount and
+     * lockedUntil — and a JPA save() writes every mapped column, not the two
+     * that changed. Without this, a service that loaded the row and saved it
+     * after another changed a different field silently reverts that change,
+     * last writer wins, with nothing to notice.
+     *
+     * Not theoretical: the same shape already happened on devices, where the
+     * detector's re-announce clobbered a name set in the console (P26-1), and
+     * the fix there was a side table holding the rename separately — a
+     * workaround for the shared write rather than a removal of it.
+     *
+     * A conflicting save now throws OptimisticLockException instead of losing
+     * the write. Callers on a contended path must retry rather than let that
+     * reach the user: the failed-login counter is the one to watch.
+     */
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
     @Column(nullable = false, unique = true, length = 100)
     private String username;
 
