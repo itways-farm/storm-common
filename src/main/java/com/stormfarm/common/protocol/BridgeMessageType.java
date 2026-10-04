@@ -22,10 +22,16 @@ public final class BridgeMessageType {
     public static final String RESET_STATE = "RESET_STATE";
     /** iOS only: a physical button WebDriverAgent can press (HOME, LOCK, VOLUME_UP, VOLUME_DOWN). */
     public static final String PRESS_BUTTON = "PRESS_BUTTON";
+    /** Run-scoped, allow-listed W3C WebDriver request via the local Appium service. */
+    public static final String AUTOMATION_HTTP = "AUTOMATION_HTTP";
+    /** Idempotently closes the local Appium session for a device. */
+    public static final String STOP_AUTOMATION = "STOP_AUTOMATION";
 
     // bridge to cloud
     public static final String DEVICE_ADDED = "DEVICE_ADDED";
     public static final String DEVICE_REMOVED = "DEVICE_REMOVED";
+    /** Agent version and explicitly supported optional protocol features. */
+    public static final String AGENT_CAPABILITIES = "AGENT_CAPABILITIES";
     public static final String SCRCPY_STATUS = "SCRCPY_STATUS";
     public static final String RESPONSE = "RESPONSE";
     public static final String HEARTBEAT = "HEARTBEAT";

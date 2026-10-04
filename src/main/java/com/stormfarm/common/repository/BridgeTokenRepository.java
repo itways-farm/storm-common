@@ -24,4 +24,24 @@ public interface BridgeTokenRepository extends JpaRepository<BridgeToken, Long> 
     @Transactional
     @Query("update BridgeToken b set b.lastSeenAt = :ts where b.token = :token")
     int touchLastSeen(@Param("token") String token, @Param("ts") Instant ts);
+
+    /** Records the feature contract of the agent authenticated by this token. */
+    @Modifying
+    @Transactional
+    @Query("""
+            update BridgeToken b set
+                b.agentVersion = :agentVersion,
+                b.agentPlatform = :agentPlatform,
+                b.protocolVersion = :protocolVersion,
+                b.capabilities = :capabilities,
+                b.capabilitiesReportedAt = :reportedAt,
+                b.lastSeenAt = :reportedAt
+            where b.token = :token and b.enabled = true
+            """)
+    int updateAgentMetadata(@Param("token") String token,
+                            @Param("agentVersion") String agentVersion,
+                            @Param("agentPlatform") String agentPlatform,
+                            @Param("protocolVersion") Integer protocolVersion,
+                            @Param("capabilities") String capabilities,
+                            @Param("reportedAt") Instant reportedAt);
 }

@@ -83,4 +83,24 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <!-- JDK 23+ no longer discovers classpath annotation processors by
+                 default. Keep Lombok explicit so the shared contract builds on
+                 both CI's Java 21 toolchain and newer developer JDKs. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.46</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

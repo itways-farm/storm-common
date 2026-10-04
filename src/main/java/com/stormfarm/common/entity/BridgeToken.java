@@ -46,4 +46,23 @@ public class BridgeToken {
     /** Refreshed by the detector whenever a bridge using this token is seen. */
     @Column(name = "last_seen_at")
     private Instant lastSeenAt;
+
+    /** Version reported by the installed CastFarmAgent, not the token hint. */
+    @Column(name = "agent_version", length = 40)
+    private String agentVersion;
+
+    /** Runtime selected by the unified desktop agent: ANDROID or IOS. */
+    @Column(name = "agent_platform", length = 20)
+    private String agentPlatform;
+
+    /** Version of the additive control protocol understood by the agent. */
+    @Column(name = "protocol_version")
+    private Integer protocolVersion;
+
+    /** Sorted, comma-separated names from BridgeCapability.KNOWN. */
+    @Column(name = "capabilities", length = 1000)
+    private String capabilities;
+
+    @Column(name = "capabilities_reported_at")
+    private Instant capabilitiesReportedAt;
 }
