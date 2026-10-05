@@ -17,6 +17,8 @@ public final class BridgeMessageType {
     public static final String STOP_SCRCPY = "STOP_SCRCPY";
     public static final String INSTALL_APK = "INSTALL_APK";
     public static final String TAKE_SCREENSHOT = "TAKE_SCREENSHOT";
+    /** On-demand, bounded and redacted device logs for a Test Lab defect. */
+    public static final String CAPTURE_DIAGNOSTICS = "CAPTURE_DIAGNOSTICS";
     public static final String GET_RUNNING_APPS = "GET_RUNNING_APPS";
     public static final String GET_FOREGROUND_APP = "GET_FOREGROUND_APP";
     public static final String RESET_STATE = "RESET_STATE";
