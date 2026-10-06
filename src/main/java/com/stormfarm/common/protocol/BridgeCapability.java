@@ -15,6 +15,8 @@ public final class BridgeCapability {
     public static final String SCREEN_STREAM_V1 = "SCREEN_STREAM_V1";
     public static final String APP_INSTALL_V1 = "APP_INSTALL_V1";
     public static final String DEVICE_DIAGNOSTICS_V1 = "DEVICE_DIAGNOSTICS_V1";
+    /** On-demand, bounded and redacted desktop-agent log snapshots. */
+    public static final String BRIDGE_LOGS_V1 = "BRIDGE_LOGS_V1";
     public static final String NATIVE_AUTOMATION_V1 = "NATIVE_AUTOMATION_V1";
     public static final String PRIVATE_CONNECTOR_V1 = "PRIVATE_CONNECTOR_V1";
 
@@ -23,6 +25,7 @@ public final class BridgeCapability {
             SCREEN_STREAM_V1,
             APP_INSTALL_V1,
             DEVICE_DIAGNOSTICS_V1,
+            BRIDGE_LOGS_V1,
             NATIVE_AUTOMATION_V1,
             PRIVATE_CONNECTOR_V1
     );
