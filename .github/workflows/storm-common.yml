@@ -3,15 +3,9 @@ name: storm-common — CI & JitPack Release
 on:
   push:
     branches: [main]
-    paths:
-      - 'storm-common/**'
-      - '.github/workflows/storm-common.yml'
-      - 'jitpack.yml'
     tags: ['common-v*']
   pull_request:
     branches: [main]
-    paths:
-      - 'storm-common/**'
 
 jobs:
   build:
