@@ -28,23 +28,37 @@ public interface DeviceRepository extends JpaRepository<Device, Long> {
 
     List<Device> findBySerialIn(Collection<String> serials);
 
-    @Query("SELECT d FROM Device d WHERE " +
-           "(:status IS NULL OR d.status = :status) AND " +
-           "(:platform IS NULL OR d.platform = :#{#platform?.name()}) AND " +
-           "(:search IS NULL OR LOWER(d.name) LIKE LOWER(CONCAT('%', cast(:search as string), '%')) OR LOWER(d.model) LIKE LOWER(CONCAT('%', cast(:search as string), '%')))")
-    Page<Device> findFiltered(@Param("status") DeviceStatus status,
-                               @Param("platform") DevicePlatform platform,
-                               @Param("search") String search,
-                               Pageable pageable);
+    /** Filters by status, platform and a raw search text; '%' and '_' in it match literally. */
+    default Page<Device> findFiltered(DeviceStatus status, DevicePlatform platform, String search, Pageable pageable) {
+        return findFilteredEscaped(status, platform, LikePattern.escape(search), pageable);
+    }
 
+    /** As {@link #findFiltered}, plus a raw brand prefix matched against the model. */
+    default Page<Device> findFilteredWithBrand(DeviceStatus status, DevicePlatform platform, String brand,
+                                               String search, Pageable pageable) {
+        return findFilteredWithBrandEscaped(status, platform, LikePattern.escape(brand),
+                LikePattern.escape(search), pageable);
+    }
+
+    /** {@code search} must already be escaped with {@link LikePattern#escape}; use {@link #findFiltered}. */
     @Query("SELECT d FROM Device d WHERE " +
            "(:status IS NULL OR d.status = :status) AND " +
            "(:platform IS NULL OR d.platform = :#{#platform?.name()}) AND " +
-           "(:brand IS NULL OR LOWER(d.model) LIKE LOWER(CONCAT(cast(:brand as string), '%'))) AND " +
-           "(:search IS NULL OR LOWER(d.name) LIKE LOWER(CONCAT('%', cast(:search as string), '%')) OR LOWER(d.model) LIKE LOWER(CONCAT('%', cast(:search as string), '%')))")
-    Page<Device> findFilteredWithBrand(@Param("status") DeviceStatus status,
-                                        @Param("platform") DevicePlatform platform,
-                                        @Param("brand") String brand,
-                                        @Param("search") String search,
-                                        Pageable pageable);
+           "(:search IS NULL OR LOWER(d.name) LIKE LOWER(CONCAT('%', cast(:search as string), '%')) ESCAPE '!' OR LOWER(d.model) LIKE LOWER(CONCAT('%', cast(:search as string), '%')) ESCAPE '!')")
+    Page<Device> findFilteredEscaped(@Param("status") DeviceStatus status,
+                                     @Param("platform") DevicePlatform platform,
+                                     @Param("search") String search,
+                                     Pageable pageable);
+
+    /** {@code brand} and {@code search} must already be escaped; use {@link #findFilteredWithBrand}. */
+    @Query("SELECT d FROM Device d WHERE " +
+           "(:status IS NULL OR d.status = :status) AND " +
+           "(:platform IS NULL OR d.platform = :#{#platform?.name()}) AND " +
+           "(:brand IS NULL OR LOWER(d.model) LIKE LOWER(CONCAT(cast(:brand as string), '%')) ESCAPE '!') AND " +
+           "(:search IS NULL OR LOWER(d.name) LIKE LOWER(CONCAT('%', cast(:search as string), '%')) ESCAPE '!' OR LOWER(d.model) LIKE LOWER(CONCAT('%', cast(:search as string), '%')) ESCAPE '!')")
+    Page<Device> findFilteredWithBrandEscaped(@Param("status") DeviceStatus status,
+                                              @Param("platform") DevicePlatform platform,
+                                              @Param("brand") String brand,
+                                              @Param("search") String search,
+                                              Pageable pageable);
 }
