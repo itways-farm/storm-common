@@ -12,4 +12,7 @@ public class InvitationResponse {
     private boolean expired;
     private Instant expiresAt;
     private Instant createdAt;
+    /** Null unless an administrator revoked the invitation. */
+    private Instant revokedAt;
+    private String revokedBy;
 }

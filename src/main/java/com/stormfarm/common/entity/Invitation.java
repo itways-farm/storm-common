@@ -11,9 +11,14 @@ public class Invitation {
     private boolean accepted;
     private Instant expiresAt;
     private Instant createdAt;
+    /** Set when an administrator withdraws the invitation; expiresAt keeps the original expiry. */
+    private Instant revokedAt;
+    /** Username of the administrator who revoked it; null for rows backfilled by V110. */
+    private String revokedBy;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "invited_by") private User invitedBy;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "role_id") private Role role;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "team_id") private Team team;
     @PrePersist void prePersist() { if (createdAt == null) createdAt = Instant.now(); }
     public boolean isExpired() { return expiresAt != null && expiresAt.isBefore(Instant.now()); }
+    public boolean isRevoked() { return revokedAt != null; }
 }
