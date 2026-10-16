@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
@@ -52,6 +53,9 @@ import java.util.stream.Collectors;
 public class CommonExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(CommonExceptionHandler.class);
+
+    /** The body of every 503 for {@link AuthenticationServiceException}. */
+    static final String SIGN_IN_UNAVAILABLE = "Sign-in is temporarily unavailable. Try again shortly.";
 
     // -- domain exceptions (com.stormfarm.common.exception) ------------------
 
@@ -106,6 +110,23 @@ public class CommonExceptionHandler {
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<ApiResponse<Void>> handleDisabled(DisabledException e) {
         return error(HttpStatus.FORBIDDEN, e.getMessage());
+    }
+
+    /**
+     * Sign-in could not be carried out at all: the directory is unreachable or
+     * its settings are unusable, or the account store failed
+     * ({@code InternalAuthenticationServiceException} is a subclass). That is an
+     * outage of the sign-in service, not a crash and not wrong credentials, so
+     * 503 rather than the catch-all's 500. The body is a fixed sentence: the
+     * exception's own message is for operators (it can describe configuration
+     * or wrap an internal error), so it and its cause go to the log only.
+     */
+    @ExceptionHandler(AuthenticationServiceException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAuthenticationService(AuthenticationServiceException e) {
+        Throwable cause = e.getCause();
+        log.error("Sign-in unavailable: {}{}", e.getMessage(),
+                cause != null ? " (" + cause.getClass().getSimpleName() + ": " + cause.getMessage() + ")" : "");
+        return error(HttpStatus.SERVICE_UNAVAILABLE, SIGN_IN_UNAVAILABLE);
     }
 
     @ExceptionHandler(AccessDeniedException.class)

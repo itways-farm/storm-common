@@ -12,6 +12,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
 
@@ -19,6 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class CommonExceptionHandlerTest {
 
@@ -40,6 +49,50 @@ class CommonExceptionHandlerTest {
         assertStatus(HttpStatus.UNAUTHORIZED, handler.handleBadCredentials(new BadCredentialsException("Invalid credentials")));
         assertStatus(HttpStatus.LOCKED, handler.handleLocked(new LockedException("locked")));
         assertStatus(HttpStatus.FORBIDDEN, handler.handleAccessDenied(new AccessDeniedException("nope")));
+    }
+
+    @Test
+    void signInServiceOutageIsA503WithAFixedMessage() {
+        // The exception's message is for operators; the body never repeats it.
+        ResponseEntity<ApiResponse<Void>> response = handler.handleAuthenticationService(
+                new AuthenticationServiceException("Directory authentication is not configured correctly",
+                        new IllegalStateException("ldap://10.0.0.5 bind DN cn=admin")));
+
+        assertStatus(HttpStatus.SERVICE_UNAVAILABLE, response);
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Sign-in is temporarily unavailable. Try again shortly.", response.getBody().getMessage());
+        assertTrue(response.getBody().getErrors().isEmpty());
+    }
+
+    @Test
+    void signInServiceOutageWinsOverTheCatchAllWhenDispatched() throws Exception {
+        // Through Spring MVC's own resolution: without the specific mapping the
+        // Exception catch-all answered 500 "An internal server error occurred".
+        MockMvc mvc = MockMvcBuilders.standaloneSetup(new OutageController())
+                .setControllerAdvice(handler)
+                .build();
+
+        mvc.perform(post("/directory-down"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Sign-in is temporarily unavailable. Try again shortly."));
+        // An account-store failure during sign-in is the same outage (subclass).
+        mvc.perform(post("/account-store-down"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.message").value("Sign-in is temporarily unavailable. Try again shortly."));
+    }
+
+    @RestController
+    static class OutageController {
+        @PostMapping("/directory-down")
+        void directoryDown() {
+            throw new AuthenticationServiceException("Directory authentication is temporarily unavailable");
+        }
+
+        @PostMapping("/account-store-down")
+        void accountStoreDown() {
+            throw new InternalAuthenticationServiceException("connection refused: jdbc:postgresql://db:5432");
+        }
     }
 
     @Test
