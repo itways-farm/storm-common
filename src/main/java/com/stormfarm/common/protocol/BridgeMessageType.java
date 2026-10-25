@@ -3,7 +3,7 @@ package com.stormfarm.common.protocol;
 /**
  * Values of the {@code type} field of the JSON messages exchanged with the
  * device bridges over {@code /ws/bridge}. The bridges (storm-android-bridge,
- * storm-ios-bridge) mirror these strings; change both sides together.
+ * storm-ios-bridge, now strom-bridge) mirror these strings; change both sides together.
  */
 public final class BridgeMessageType {
 
@@ -30,6 +30,14 @@ public final class BridgeMessageType {
     public static final String AUTOMATION_HTTP = "AUTOMATION_HTTP";
     /** Idempotently closes the local Appium session for a device. */
     public static final String STOP_AUTOMATION = "STOP_AUTOMATION";
+    /** Element tree of the screen, for the test recorder's element picking (ITM-0078). */
+    public static final String INSPECT_UI = "INSPECT_UI";
+    /** Restarts the app under test before a recording or a run (ITM-0078). */
+    public static final String RESTART_APP = "RESTART_APP";
+    /** Emulators, simulators and runtimes available on a lab host (ITM-0081). */
+    public static final String LIST_VIRTUAL_DEVICES = "LIST_VIRTUAL_DEVICES";
+    /** Boots an emulator or simulator on a lab host (ITM-0081). */
+    public static final String BOOT_VIRTUAL_DEVICE = "BOOT_VIRTUAL_DEVICE";
 
     // bridge to cloud
     public static final String DEVICE_ADDED = "DEVICE_ADDED";
