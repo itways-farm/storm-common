@@ -5,5 +5,7 @@ public enum DevicePlatform {
     IOS,
     WEB,
     /** A Windows desktop on a lab host, driven through UI Automation (ITM-0083). */
-    WINDOWS
+    WINDOWS,
+    /** A Mac on a lab host, driven through Apple's accessibility (Appium Mac2). Add-only. */
+    MACOS
 }
